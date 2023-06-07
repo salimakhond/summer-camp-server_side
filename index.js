@@ -28,9 +28,14 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
 
+        const classesCollection = client.db("SummerCampDb").collection("classes");
 
 
-
+        // classes API
+        app.get('/classes', async (req, res) => {
+            const result = await classesCollection.find().toArray();
+            res.send(result)
+        })
 
 
 
