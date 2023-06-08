@@ -33,20 +33,27 @@ async function run() {
         const usersCollection = client.db("SummerCampDb").collection("users");
 
 
-
-        app.put('/users/:email',async(req,res)=>{
-            const email=req.params.email;
-            const user=req.body;
-            const query={email:email}
-            const options={upsert:true}
-            const updateDoc={
-                $set:user
+        // users API
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const query = { email: email }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: user
             }
-            const result=await usersCollection.updateOne(query,updateDoc, options);
+            const result = await usersCollection.updateOne(query, updateDoc, options);
             res.send(result)
         })
 
-        
+
+
+        app.get('/users', async (req, res) => {
+            const result = await usersCollection.find({}).toArray();
+            res.send(result);
+        })
+
+
 
         // classes API
         app.get('/classes', async (req, res) => {
@@ -55,7 +62,7 @@ async function run() {
         })
 
 
-        // classes API
+        // instructors API
         app.get('/instructors', async (req, res) => {
             const result = await instructorsCollection.find().toArray();
             res.send(result)
