@@ -31,6 +31,7 @@ async function run() {
         const classesCollection = client.db("SummerCampDb").collection("classes");
         const instructorsCollection = client.db("SummerCampDb").collection("instructors");
         const usersCollection = client.db("SummerCampDb").collection("users");
+        const bookingCollection = client.db("SummerCampDb").collection("booking");
 
 
 
@@ -42,7 +43,7 @@ async function run() {
             const query = { email: user.email }
             const existingUser = await usersCollection.findOne(query);
             if (existingUser) {
-                return res.send({ message: 'user already exists' })
+                return res.send({ message: `${user.name} already exists database` });
             }
 
             const result = await usersCollection.insertOne(user);
@@ -87,6 +88,14 @@ async function run() {
         })
 
 
+
+
+        // booking API
+        app.post('/booking', async (req, res) => {
+            const item = req.body;
+            const result = await bookingCollection.insertOne(item);
+            res.send(result);
+        })
 
 
 
