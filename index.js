@@ -30,7 +30,23 @@ async function run() {
 
         const classesCollection = client.db("SummerCampDb").collection("classes");
         const instructorsCollection = client.db("SummerCampDb").collection("instructors");
+        const usersCollection = client.db("SummerCampDb").collection("users");
 
+
+
+        app.put('/users/:email',async(req,res)=>{
+            const email=req.params.email;
+            const user=req.body;
+            const query={email:email}
+            const options={upsert:true}
+            const updateDoc={
+                $set:user
+            }
+            const result=await usersCollection.updateOne(query,updateDoc, options);
+            res.send(result)
+        })
+
+        
 
         // classes API
         app.get('/classes', async (req, res) => {
