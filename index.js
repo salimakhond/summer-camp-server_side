@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 require('dotenv').config()
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
@@ -28,6 +29,15 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
 
+
+        // JWT API
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            res.send({ token });
+        })
+
+
         const classesCollection = client.db("SummerCampDb").collection("classes");
         const instructorsCollection = client.db("SummerCampDb").collection("instructors");
         const usersCollection = client.db("SummerCampDb").collection("users");
@@ -39,13 +49,11 @@ async function run() {
         // users API
         app.post('/users', async (req, res) => {
             const user = req.body;
-
             const query = { email: user.email }
             const existingUser = await usersCollection.findOne(query);
             if (existingUser) {
                 return res.send({ message: `${user.name} already exists database` });
             }
-
             const result = await usersCollection.insertOne(user);
             res.send(result);
         })
