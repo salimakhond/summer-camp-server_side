@@ -167,11 +167,17 @@ async function run() {
 
 
         // booking API
-        app.post('/booking', async (req, res) => {
+        app.post("/booking", async (req, res) => {
             const item = req.body;
-            const result = await bookingCollection.insertOne(item);
-            res.send(result);
-        })
+            const classUpdateResult = await classesCollection.updateOne(
+                { _id: new ObjectId(item.classId) },
+                { $inc: { seats: -1 } }
+            );
+            const bookingInsertResult = await bookingCollection.insertOne(item);
+            res.send(bookingInsertResult)
+        });
+
+
 
         app.get('/booking', verifyJWT, async (req, res) => {
             const email = req.query.email;
