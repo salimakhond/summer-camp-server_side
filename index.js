@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors')
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
@@ -83,6 +84,7 @@ async function run() {
         const instructorsCollection = client.db("SummerCampDb").collection("instructors");
         const usersCollection = client.db("SummerCampDb").collection("users");
         const bookingCollection = client.db("SummerCampDb").collection("booking");
+        const paymentCollection = client.db("SummerCampDb").collection("payments");
 
 
 
@@ -202,6 +204,13 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/booking/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await bookingCollection.findOne(query);
+            res.send(result);
+        })
+
 
 
         // classes page API
@@ -224,6 +233,50 @@ async function run() {
             res.send(result)
         })
 
+
+
+
+
+        // payment API
+        app.get('/payments', async (req, res) => {
+            console.log(req.query.email);
+            let query = {};
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            };
+            const cursor = paymentCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result)
+        });
+
+
+
+        app.post('/payments', verifyJWT, async (req, res) => {
+            const payment = req.body;
+            const insertResult = await paymentCollection.insertOne(payment);
+            console.log(payment);
+            const id = payment.cartItems;
+            console.log(id);
+            const query = { _id: new ObjectId(id) }
+            const deleteResult = await bookingCollection.deleteOne(query)
+
+            res.send({ insertResult, deleteResult });
+        });
+
+
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        });
 
 
 
