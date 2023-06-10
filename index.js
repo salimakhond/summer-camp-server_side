@@ -85,6 +85,7 @@ async function run() {
         const usersCollection = client.db("SummerCampDb").collection("users");
         const bookingCollection = client.db("SummerCampDb").collection("booking");
         const paymentCollection = client.db("SummerCampDb").collection("payments");
+        const instructorsClassesCollection = client.db("SummerCampDb").collection("instructorsClasses");
 
 
 
@@ -224,6 +225,29 @@ async function run() {
             const result = await classesCollection.insertOne(classes);
             res.send(result);
         });
+
+
+
+        // instructors class API
+        app.post('/instructorsClasses', async (req, res) => {
+            const data = req.body;
+            const result = await instructorsClassesCollection.insertOne(data);
+            res.send(result);
+        })
+
+        app.get('/instructorsClasses/:email', async (req, res) => {
+            const email = req.params.email;
+            const result = await instructorsClassesCollection.find({ email: req.params.email }).toArray();
+            res.send(result);
+        });
+        
+        // get instructors classes
+        app.get('/instructorsClasses', async (req, res) => {
+            const cursor = instructorsAddedClassCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
 
 
         // instructors page API
