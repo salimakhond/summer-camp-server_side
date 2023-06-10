@@ -240,14 +240,35 @@ async function run() {
             const result = await instructorsClassesCollection.find({ email: req.params.email }).toArray();
             res.send(result);
         });
-        
+
         // get instructors classes
         app.get('/instructorsClasses', async (req, res) => {
-            const cursor = instructorsAddedClassCollection.find();
+            const cursor = instructorsClassesCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
 
+        // update specific data
+        app.patch('/instructorsClasses/approved/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: { status: 'Approved' }
+            }
+            const result = await instructorsClassesCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
+        // update deny button
+        app.patch('/instructorsClasses/denied/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: { status: 'Denied' }
+            }
+            const result = await instructorsClassesCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
 
 
         // instructors page API
