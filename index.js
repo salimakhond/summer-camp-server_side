@@ -226,15 +226,17 @@ async function run() {
         });
 
 
-
         // instructors page API
         app.get('/instructors', async (req, res) => {
             const result = await instructorsCollection.find().toArray();
             res.send(result)
         })
 
-
-
+        app.post('/instructors', async (req, res) => {
+            const data = req.body;
+            const result = await instructorsCollection.insertOne(data);
+            res.send(result);
+        })
 
 
         // payment API
@@ -248,7 +250,6 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result)
         });
-
 
 
         app.post('/payments', verifyJWT, async (req, res) => {
