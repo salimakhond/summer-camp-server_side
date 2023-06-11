@@ -102,7 +102,6 @@ async function run() {
             res.send(result);
         })
 
-
         app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find({}).toArray();
             res.send(result);
@@ -176,8 +175,6 @@ async function run() {
             res.send(bookingInsertResult)
         });
 
-
-
         app.get('/booking', verifyJWT, async (req, res) => {
             const email = req.query.email;
             if (!email) {
@@ -237,13 +234,14 @@ async function run() {
             res.send(result);
         });
 
-        // get instructors classes
+        // get instructors classes API
         app.get('/instructorsClasses', async (req, res) => {
             const cursor = instructorsClassesCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
 
+        // instructorsClasses status approved API
         app.patch('/instructorsClasses/approved/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
@@ -284,6 +282,7 @@ async function run() {
             }
         });
 
+        // instructorsClasses status feedback API
         app.patch("/instructorsClasses/feedback/:id", async (req, res) => {
             try {
                 const id = req.params.id;
@@ -300,11 +299,7 @@ async function run() {
             }
         });
 
-
-
-
-
-        // instructorsClasses status denied
+        // instructorsClasses status denied API
         app.patch('/instructorsClasses/denied/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
@@ -314,6 +309,7 @@ async function run() {
             const result = await instructorsClassesCollection.updateOne(filter, updateDoc);
             res.send(result);
         })
+
 
 
         // instructors page API
@@ -329,39 +325,26 @@ async function run() {
         })
 
 
+
         // payment API
         app.get('/payments', async (req, res) => {
-            console.log(req.query.email);
             let query = {};
             if (req.query?.email) {
-                query = { email: req.query.email }
-            };
-            const cursor = paymentCollection.find(query);
+                query = { email: req.query.email };
+            }
+            const cursor = paymentCollection.find(query).sort({ date: -1 });
             const result = await cursor.toArray();
-            res.send(result)
+            res.send(result);
         });
-
-
-        // app.post('/payments', verifyJWT, async (req, res) => {
-        //     const payment = req.body;
-        //     const insertResult = await paymentCollection.insertOne(payment);
-        //     console.log(payment);
-
-        //     const id = payment.cartItems;
-        //     console.log(id);
-        //     const query = { _id: new ObjectId(id) }
-        //     const deleteResult = await bookingCollection.deleteOne(query)
-
-        //     res.send({ insertResult, deleteResult });
-        // });
+        
+        
+        
 
         app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
             const insertResult = await paymentCollection.insertOne(payment);
-            console.log(payment);
 
             const id = payment.cartItems;
-            console.log(id);
             const query = { _id: new ObjectId(id) }
             const deleteResult = await bookingCollection.deleteOne(query)
 
@@ -370,22 +353,15 @@ async function run() {
                     { _id: new ObjectId(payment.classBooking) },
                     { $inc: { seats: -1, enrolled: 1 } }
                 );
-                console.log(classUpdateResult);
 
                 const instructorClassUpdateResult = await instructorsClassesCollection.updateOne(
                     { _id: new ObjectId(payment.classBooking) },
                     { $inc: { seats: -1, enrolled: 1 } }
                 );
-                console.log(instructorClassUpdateResult);
             }
 
             res.send({ insertResult, deleteResult });
         });
-
-
-
-
-
 
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
             const { price } = req.body;
@@ -400,9 +376,6 @@ async function run() {
                 clientSecret: paymentIntent.client_secret
             })
         });
-
-
-
 
 
 
