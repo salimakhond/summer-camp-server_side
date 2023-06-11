@@ -51,7 +51,7 @@ async function run() {
         // JWT API
         app.post('/jwt', (req, res) => {
             const user = req.body;
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
             res.send({ token });
         })
 
@@ -172,10 +172,6 @@ async function run() {
         // booking API
         app.post("/booking", async (req, res) => {
             const item = req.body;
-            const classUpdateResult = await classesCollection.updateOne(
-                { _id: new ObjectId(item.classId) },
-                { $inc: { seats: -1 } }
-            );
             const bookingInsertResult = await bookingCollection.insertOne(item);
             res.send(bookingInsertResult)
         });
@@ -228,7 +224,7 @@ async function run() {
 
 
 
-        // instructors class API
+        // instructor class API
         app.post('/instructorsClasses', async (req, res) => {
             const data = req.body;
             const result = await instructorsClassesCollection.insertOne(data);
@@ -248,18 +244,67 @@ async function run() {
             res.send(result);
         })
 
-        // update specific data
         app.patch('/instructorsClasses/approved/:id', async (req, res) => {
             const id = req.params.id;
-            const filter = { _id: new ObjectId(id) }
+            const filter = { _id: new ObjectId(id) };
             const updateDoc = {
                 $set: { status: 'Approved' }
-            }
-            const result = await instructorsClassesCollection.updateOne(filter, updateDoc);
-            res.send(result);
-        })
+            };
 
-        // update deny button
+            const result = await instructorsClassesCollection.updateOne(filter, updateDoc);
+
+            if (result.modifiedCount === 1) {
+                const classesFilter = { _id: new ObjectId(id) };
+
+                const addedClass = await instructorsClassesCollection.findOne(classesFilter);
+
+                if (addedClass) {
+                    const classesResult = await classesCollection.insertOne({
+                        _id: addedClass._id,
+                        name: addedClass.name,
+                        email: addedClass.email,
+                        image: addedClass.image,
+                        instructor: addedClass.instructor,
+                        seats: parseFloat(addedClass.seats),
+                        price: parseFloat(addedClass.price),
+                        enrolled: parseFloat(addedClass.enrolled),
+                        status: 'Approved'
+                    });
+
+                    if (classesResult.insertedId) {
+                        res.send({ success: true });
+                    } else {
+                        res.status(500).send({ error: 'Failed to add document to classesCollection.' });
+                    }
+                } else {
+                    res.status(404).send({ error: 'Document not found in instructorsAddedClassCollection.' });
+                }
+            } else {
+                res.status(500).send({ error: 'Failed to update status in instructorsAddedClassCollection.' });
+            }
+        });
+
+        app.patch("/instructorsClasses/feedback/:id", async (req, res) => {
+            try {
+              const id = req.params.id;
+              const {feedback} = req.body;
+              const filter = { _id: new ObjectId(id) };
+              const updateDoc = {
+                $set: { feedback: feedback },
+              };
+              const result = await instructorsClassesCollection.updateOne(filter, updateDoc);
+              res.send(result);
+            } catch (error) {
+              console.error("Error adding feedback:", error);
+              res.status(500).json({ error: "Internal server error" });
+            }
+          });
+          
+
+
+
+
+        // instructorsClasses status denied
         app.patch('/instructorsClasses/denied/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
@@ -301,6 +346,7 @@ async function run() {
             const payment = req.body;
             const insertResult = await paymentCollection.insertOne(payment);
             console.log(payment);
+
             const id = payment.cartItems;
             console.log(id);
             const query = { _id: new ObjectId(id) }
@@ -308,6 +354,9 @@ async function run() {
 
             res.send({ insertResult, deleteResult });
         });
+
+    
+          
 
 
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
