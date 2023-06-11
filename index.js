@@ -325,6 +325,18 @@ async function run() {
         })
 
 
+        // popular classes API
+        app.get('/popular-classes', async (req, res) => {
+            const result = await classesCollection.find().sort({ enrolled: -1 }).limit(6).toArray();
+            res.send(result);
+        });
+
+        // popular instructors API
+        app.get('/popular-instructors', async (req, res) => {
+            const result = await instructorsCollection.find().limit(6).toArray();
+            res.send(result);
+        });
+
 
         // payment API
         app.get('/payments', async (req, res) => {
