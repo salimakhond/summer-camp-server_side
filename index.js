@@ -286,20 +286,20 @@ async function run() {
 
         app.patch("/instructorsClasses/feedback/:id", async (req, res) => {
             try {
-              const id = req.params.id;
-              const {feedback} = req.body;
-              const filter = { _id: new ObjectId(id) };
-              const updateDoc = {
-                $set: { feedback: feedback },
-              };
-              const result = await instructorsClassesCollection.updateOne(filter, updateDoc);
-              res.send(result);
+                const id = req.params.id;
+                const { feedback } = req.body;
+                const filter = { _id: new ObjectId(id) };
+                const updateDoc = {
+                    $set: { feedback: feedback },
+                };
+                const result = await instructorsClassesCollection.updateOne(filter, updateDoc);
+                res.send(result);
             } catch (error) {
-              console.error("Error adding feedback:", error);
-              res.status(500).json({ error: "Internal server error" });
+                console.error("Error adding feedback:", error);
+                res.status(500).json({ error: "Internal server error" });
             }
-          });
-          
+        });
+
 
 
 
@@ -342,6 +342,19 @@ async function run() {
         });
 
 
+        // app.post('/payments', verifyJWT, async (req, res) => {
+        //     const payment = req.body;
+        //     const insertResult = await paymentCollection.insertOne(payment);
+        //     console.log(payment);
+
+        //     const id = payment.cartItems;
+        //     console.log(id);
+        //     const query = { _id: new ObjectId(id) }
+        //     const deleteResult = await bookingCollection.deleteOne(query)
+
+        //     res.send({ insertResult, deleteResult });
+        // });
+
         app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
             const insertResult = await paymentCollection.insertOne(payment);
@@ -352,11 +365,26 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const deleteResult = await bookingCollection.deleteOne(query)
 
+            if (insertResult.acknowledged && deleteResult.deletedCount === 1) {
+                const classUpdateResult = await classesCollection.updateOne(
+                    { _id: new ObjectId(payment.classBooking) },
+                    { $inc: { seats: -1, enrolled: 1 } }
+                );
+                console.log(classUpdateResult);
+
+                const instructorClassUpdateResult = await instructorsClassesCollection.updateOne(
+                    { _id: new ObjectId(payment.classBooking) },
+                    { $inc: { seats: -1, enrolled: 1 } }
+                );
+                console.log(instructorClassUpdateResult);
+            }
+
             res.send({ insertResult, deleteResult });
         });
 
-    
-          
+
+
+
 
 
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
