@@ -324,6 +324,7 @@ async function run() {
             res.send(result);
         })
 
+        
 
         // popular classes API
         app.get('/popular-classes', async (req, res) => {
@@ -338,6 +339,40 @@ async function run() {
         });
 
 
+
+        // classes by id API
+        app.get('/classes-by-id/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await classesCollection.findOne(query);
+            res.send(result);
+        })
+
+        // classes update API
+        app.put('/classes-by-id/:id', async (req, res) => {
+            const id = req.params.id;
+            const update = req.body;
+            const query = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updatedClass = {
+                $set: {
+                    updateId: update._id,
+                    email: update.email,
+                    enrolled: update.enrolled,
+                    price: update.price,
+                    image: update.image,
+                    instructor: update.instructor,
+                    name: update.name,
+                    seats: update.seats,
+                    status: update.status,
+                }
+            }
+            const result = await classesCollection.updateOne(query, updatedClass, options);
+            res.send(result);
+        });
+
+
+
         // payment API
         app.get('/payments', async (req, res) => {
             let query = {};
@@ -348,9 +383,6 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         });
-        
-        
-        
 
         app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
