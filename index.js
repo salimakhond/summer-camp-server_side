@@ -324,7 +324,7 @@ async function run() {
             res.send(result);
         })
 
-        
+
 
         // popular classes API
         app.get('/popular-classes', async (req, res) => {
@@ -371,16 +371,11 @@ async function run() {
             res.send(result);
         });
 
+    
 
-
-        // payment API
-        app.get('/payments', async (req, res) => {
-            let query = {};
-            if (req.query?.email) {
-                query = { email: req.query.email };
-            }
-            const cursor = paymentCollection.find(query).sort({ date: -1 });
-            const result = await cursor.toArray();
+        // payment history by email API
+        app.get('/payments-by-email/:email', async (req, res) => {
+            const result = await paymentCollection.find({ email: req.params.email }).sort({ date: -1 }).toArray();
             res.send(result);
         });
 
